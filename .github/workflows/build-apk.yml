@@ -3,8 +3,6 @@ name: Build APK
 on:
   push:
     branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -22,32 +20,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: 🛠 设置 Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
       - name: 🔧 设置 Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-34 build-tools;34.0.0'
 
-      - name: 📐 生成 Gradle Wrapper
-        run: |
-          # 下载 gradle wrapper jar
-          mkdir -p gradle/wrapper
-          curl -sL "https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar 2>/dev/null || \
-          curl -sL "https://services.gradle.org/distributions/gradle-8.4-bin.zip" -o /tmp/gradle.zip && \
-          unzip -q -o /tmp/gradle.zip -d /tmp/ && \
-          /tmp/gradle-8.4/bin/gradle wrapper --gradle-version 8.4 && \
-          rm -rf /tmp/gradle-8.4 /tmp/gradle.zip
-          chmod +x gradlew
-          ./gradlew --version
-
-      - name: 🛠 Gradle Build Cache
-        uses: gradle/actions/setup-gradle@v3
-
       - name: 📦 构建 Debug APK
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: 📦 构建 Release APK
-        run: ./gradlew assembleRelease --no-daemon || echo "Release 无签名跳过"
-        continue-on-error: true
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: 📎 上传 Debug APK
         uses: actions/upload-artifact@v4
@@ -56,17 +40,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: 📎 上传 Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: nursing-assistant-release
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
-          retention-days: 30
-        continue-on-error: true
-
-      - name: 📊 产物信息
+      - name: 📊 构建产物
         run: |
-          echo "====== Debug APK ======"
-          ls -lh app/build/outputs/apk/debug/*.apk 2>/dev/null || echo "(未生成)"
-          echo "====== Release APK ====="
-          ls -lh app/build/outputs/apk/release/*.apk 2>/dev/null || echo "(未生成)"
+          echo "=========== APK 文件 ==========="
+          find app/build/outputs -name "*.apk" -exec ls -lh {} \; 2>/dev/null || echo "未找到 APK"
