@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">护理刷题助手</string>
+    <string name="accessibility_service_description">护理刷题助手需要无障碍权限来读取屏幕上的题目内容和自动点击答案选项。</string>
+
+    <!-- 悬浮窗 -->
+    <string name="float_collect">收集题目</string>
+    <string name="float_answer">一键答题</string>
+    <string name="float_stats">题库 %d 题</string>
+    <string name="float_settings">打开设置</string>
+    <string name="float_close">关闭悬浮窗</string>
+
+    <!-- 主页面 -->
+    <string name="title_service_status">服务状态</string>
+    <string name="title_target_app">目标应用</string>
+    <string name="title_question_bank">题库管理</string>
+    <string name="title_import_export">导入导出</string>
+
+    <string name="btn_start_accessibility">开启无障碍服务</string>
+    <string name="btn_start_overlay">开启悬浮窗权限</string>
+    <string name="btn_start_float">显示悬浮窗</string>
+    <string name="btn_select_target">选择目标应用</string>
+    <string name="btn_import">导入题库 (JSON)</string>
+    <string name="btn_export">导出题库 (JSON)</string>
+    <string name="btn_clear_bank">清空题库</string>
+
+    <string name="status_running">运行中</string>
+    <string name="status_stopped">已停止</string>
+    <string name="hint_select_app">请先在手机上安装护理助手 App</string>
+    <string name="dialog_clear_confirm">确定要清空所有题库数据吗？此操作不可恢复。</string>
+</resources>
