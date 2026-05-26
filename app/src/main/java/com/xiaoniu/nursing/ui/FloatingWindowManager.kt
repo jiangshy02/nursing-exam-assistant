@@ -380,13 +380,11 @@ class FloatingWindowManager(private val context: Context) {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        // 标签圆
         val labelView = TextView(context).apply {
             text = label
             textSize = 12f
             gravity = Gravity.CENTER
-            width = dp(24)
-            height = dp(24)
+            layoutParams = ViewGroup.LayoutParams(dp(24), dp(24))
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(if (isCorrect) 0xFF4CAF50.toInt() else 0xFFE0E0E0.toInt())
@@ -663,7 +661,7 @@ class FloatingWindowManager(private val context: Context) {
             text = icon
             textSize = 20f
             gravity = Gravity.CENTER
-            width = dp(36)
+            layoutParams = ViewGroup.LayoutParams(dp(36), ViewGroup.LayoutParams.WRAP_CONTENT)
         })
 
         // 标题 + 副标题
@@ -680,7 +678,7 @@ class FloatingWindowManager(private val context: Context) {
             textSize = 18f
             setTextColor(0xFFCCCCCC.toInt())
             gravity = Gravity.CENTER
-            width = dp(24)
+            layoutParams = ViewGroup.LayoutParams(dp(24), ViewGroup.LayoutParams.WRAP_CONTENT)
         })
 
         return row
