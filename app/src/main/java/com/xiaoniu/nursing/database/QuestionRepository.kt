@@ -25,6 +25,8 @@ class QuestionRepository(private val context: Context) {
 
     suspend fun getByHash(hash: String): QuestionWithOptions? = dao.getByHashWithOptions(hash)
 
+    suspend fun getQuestionWithOptions(id: Long): QuestionWithOptions? = dao.getQuestionWithOptions(id)
+
     suspend fun getStats(): QuestionBankStats = dao.getStats()
 
     // ===== 保存（带去重） =====
