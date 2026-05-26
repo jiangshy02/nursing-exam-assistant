@@ -19,8 +19,8 @@ import androidx.room.*
 )
 data class Option(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    @ColumnInfo(name = "question_id") val questionId: Long,
-    @ColumnInfo(name = "label") val label: String,        // A/B/C/D/√/×
+    @ColumnInfo(name = "question_id") val questionId: Long = 0,
+    @ColumnInfo(name = "label") val label: String,
     @ColumnInfo(name = "text") val text: String,
     @ColumnInfo(name = "is_correct") val isCorrect: Boolean = false
 )
