@@ -266,6 +266,9 @@ class FloatingWindowManager(private val context: Context) {
         bottomRow.addView(actionChip("✕ 关闭") { hide() })
         card.addView(bottomRow)
 
+        // 高亮当前模式
+        highlightCurrentMode()
+
         return card
     }
 
@@ -493,8 +496,35 @@ class FloatingWindowManager(private val context: Context) {
             else -> return
         }
         context.sendBroadcast(Intent(action).setPackage(context.packageName))
-        dismissMenu()
+        // 切换模式后更新菜单高亮，不关闭菜单
+        highlightCurrentMode()
         updateFloatIcon()
+    }
+
+    private fun highlightCurrentMode() {
+        // 在菜单中高亮当前模式（通过遍历菜单子view设置颜色）
+        menuPanel?.let { panel ->
+            val container = panel as? ViewGroup ?: return
+            for (i in 0 until container.childCount) {
+                val child = container.getChildAt(i)
+                if (child is ViewGroup && child.childCount >= 2) {
+                    val titleView = child.getChildAt(1) as? ViewGroup
+                    val titleTv = titleView?.getChildAt(0) as? TextView
+                    val subtitleTv = titleView?.getChildAt(1) as? TextView
+                    if (titleTv != null && subtitleTv != null) {
+                        val isActive = when (titleTv.text.toString()) {
+                            "收集模式" -> currentMode == ExamAccessibilityService.MODE_COLLECT
+                            "答题模式" -> currentMode == ExamAccessibilityService.MODE_ANSWER
+                            else -> false
+                        }
+                        titleTv.setTextColor(if (isActive) 0xFF2196F3.toInt() else 0xFF333333.toInt())
+                        subtitleTv.setTextColor(
+                            if (isActive) 0xFF64B5F6.toInt() else 0xFF999999.toInt()
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun manualCollect() {
