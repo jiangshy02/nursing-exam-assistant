@@ -81,7 +81,11 @@ class FloatingWindowManager(private val context: Context) {
             wm.addView(floatBtn, btnParams)
             isShowing = true
             registerReceiver()
-        } catch (e: SecurityException) { /* 无悬浮窗权限 */ }
+        } catch (e: SecurityException) {
+            android.util.Log.e("FloatingWindow", "⛔ 无悬浮窗权限: ${e.message}")
+        } catch (e: Exception) {
+            android.util.Log.e("FloatingWindow", "⛔ 悬浮窗显示失败: ${e.message}")
+        }
     }
 
     fun hide() {
@@ -613,8 +617,8 @@ class FloatingWindowManager(private val context: Context) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
         PixelFormat.TRANSLUCENT
     ).apply { gravity = Gravity.TOP or Gravity.START }
 
