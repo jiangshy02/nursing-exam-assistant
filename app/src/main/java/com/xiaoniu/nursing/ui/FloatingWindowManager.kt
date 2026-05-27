@@ -26,7 +26,7 @@ import com.xiaoniu.nursing.service.ExamAccessibilityService
 class FloatingWindowManager(private val context: Context) {
 
     companion object {
-        private const val COLLAPSED_SIZE_DP = 44
+        private const val COLLAPSED_SIZE_DP = 64
         private const val EXPANDED_WIDTH_DP = 240
         private const val EXPANDED_HEIGHT_DP = 320
         private const val RESULT_CARD_WIDTH_DP = 260
@@ -113,8 +113,8 @@ class FloatingWindowManager(private val context: Context) {
         val circle = View(context).apply {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(0xCCFFFFFF.toInt())   // 半透明白色
-                setStroke(1, 0x33000000)        // 浅灰边框
+                setColor(0xFF2196F3.toInt())   // 蓝色
+                setStroke(2, 0xFF1976D2.toInt())  // 深蓝边框
             }
             // 阴影效果
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -134,9 +134,10 @@ class FloatingWindowManager(private val context: Context) {
 
         // ➕ 图标
         val icon = TextView(context).apply {
-            text = "✚"
-            textSize = 20f
-            setTextColor(0xFF333333.toInt())
+            text = "✦"
+            textSize = 28f
+            setTextColor(0xFFFFFFFF.toInt())
+            setShadowLayer(4f, 1f, 1f, 0x80000000.toInt())
             gravity = Gravity.CENTER
             tag = "float_icon"
         }
