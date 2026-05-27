@@ -249,6 +249,10 @@ class FloatingWindowManager(private val context: Context) {
             manualCollect()
         })
 
+        card.addView(menuRow("🔍", "调试：检查屏幕文本", "查看当前屏幕是否可读") {
+            checkScreenText()
+        })
+
         // 分隔线
         card.addView(divider())
 
@@ -535,6 +539,13 @@ class FloatingWindowManager(private val context: Context) {
         }
     }
 
+    private fun checkScreenText() {
+        // 通过广播触发 ExamAccessibilityService 检查屏幕文本并广播回来
+        context.sendBroadcast(
+            Intent(ExamAccessibilityService.ACTION_CHECK_SCREEN_TEXT)
+                .setPackage(context.packageName)
+        )
+    }
     private fun manualCollect() {
         // 手动触发收集当前屏幕的题目
         context.sendBroadcast(
@@ -623,6 +634,27 @@ class FloatingWindowManager(private val context: Context) {
                     currentMode = intent.getStringExtra("mode") ?: ExamAccessibilityService.MODE_IDLE
                     updateFloatIcon()
                 }
+                ExamAccessibilityService.ACTION_SCREEN_TEXT_RESULT -> {
+                    val count = intent.getIntExtra("node_count", 0)
+                    val sample = intent.getStringExtra("sample") ?: ""
+                    // 在状态行显示调试信息，3秒后恢复
+                    menuPanel?.let { panel ->
+                        (panel as? ViewGroup)?.let { vg ->
+                            for (i in 0 until vg.childCount) {
+                                val tv = vg.getChildAt(i) as? TextView
+                                if (tv?.tag == "status_row") {
+                                    val prev = tv.text
+                                    tv.text = "📄 ${count}个文本节点"
+                                    tv.postDelayed({ tv.text = prev }, 3000)
+                                }
+                            }
+                        }
+                    }
+                    // 弹卡片显示详细信息
+                    showDebugCard("检测到 ${count} 个文本节点
+前3条:
+${sample}")
+                }
             }
         }
     }
@@ -633,6 +665,7 @@ class FloatingWindowManager(private val context: Context) {
             addAction(ExamAccessibilityService.ACTION_QUESTION_NOT_FOUND)
             addAction(ExamAccessibilityService.ACTION_COLLECT_DONE)
             addAction(ExamAccessibilityService.ACTION_MODE_CHANGED)
+            addAction(ExamAccessibilityService.ACTION_SCREEN_TEXT_RESULT)
         }
         context.registerReceiver(resultReceiver, filter)
     }
@@ -643,6 +676,37 @@ class FloatingWindowManager(private val context: Context) {
         icon.postDelayed({ updateFloatIcon() }, 2000)
     }
 
+    private fun showDebugCard(msg: String) {
+        // 简单 toast 风格通知
+        val card = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(10).toFloat()
+                setColor(0xF0FFFFFF.toInt())
+                setStroke(1, 0x1A000000)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                elevation = dp(10).toFloat()
+            }
+        }
+
+        card.addView(textView("🐛 调试信息", 13f, 0xFF333333.toInt(), bold = true).apply {
+            setPadding(0, 0, 0, dp(6))
+        })
+        card.addView(textView(msg, 12f, 0xFF666666.toInt()))
+
+        val params = overlayParams(dp(300), ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            x = (dm.widthPixels - dp(300)) / 2
+            y = dm.heightPixels / 4
+        }
+        wm.addView(card, params)
+        card.postDelayed({
+            card.animate().alpha(0f).setDuration(200)
+                .withEndAction { safeRemove(card) }.start()
+        }, 4000)
+    }
     private fun flashCollectNotification(count: Int) {
         menuPanel?.let { panel ->
             (panel as? ViewGroup)?.let { vg ->
