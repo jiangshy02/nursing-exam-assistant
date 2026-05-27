@@ -381,7 +381,7 @@ class FloatingWindowManager(private val context: Context) {
         }
 
         val labelView = TextView(context).apply {
-            text = label
+            this.text = label
             textSize = 12f
             gravity = Gravity.CENTER
             layoutParams = ViewGroup.LayoutParams(dp(24), dp(24))
