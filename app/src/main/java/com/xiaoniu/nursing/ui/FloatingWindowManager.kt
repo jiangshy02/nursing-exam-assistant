@@ -373,7 +373,7 @@ class FloatingWindowManager(private val context: Context) {
         return card
     }
 
-    private fun optionRow(label: String, text: String, isCorrect: Boolean): View {
+    private fun optionRow(label: String, optionText: String, isCorrect: Boolean): View {
         val row = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(3), 0, dp(3))
@@ -397,7 +397,7 @@ class FloatingWindowManager(private val context: Context) {
         })
 
         val textView = TextView(context).apply {
-            text = text
+            this.text = optionText
             textSize = 13f
             setTextColor(if (isCorrect) 0xFF2E7D32.toInt() else 0xFF666666.toInt())
             maxLines = 2
