@@ -115,27 +115,37 @@ class ExamAccessibilityService : AccessibilityService() {
      */
     private fun onContentChanged(event: AccessibilityEvent) {
         val root = rootInActiveWindow ?: return
-        val questions = ExamParser.parseFromNode(root)
+
+        val questionsWithNodes = ExamParser.parseFromNodeWithState(root)
         root.recycle()
 
-        if (questions.isEmpty()) return
-        val q = questions.first()
+        if (questionsWithNodes.isEmpty()) return
+        val (q, optNodes) = questionsWithNodes.first()
+
+        // 检测正确答案：通过节点状态判断
+        val correctedOptions = q.options.mapIndexed { idx, opt ->
+            val isCorrect = if (idx < optNodes.size && optNodes[idx] != null)
+                ExamParser.isCorrectOptionNode(optNodes[idx]!!)
+            else
+                opt.isCorrect
+            opt.copy(isCorrect = isCorrect)
+        }
+        val qWithCorrect = q.copy(options = correctedOptions)
 
         // 去重：同一题短时间内不重复处理
         if (q.textHash == lastHash) return
         lastHash = q.textHash
 
         Log.d(TAG, "📋 检测到题目: type=${q.questionType.label} " +
-                "text=${q.rawText.take(60)}... options=${q.options.size}")
+                "text=${q.rawText.take(60)}... options=${qWithCorrect.options.size} " +
+                "corrects=${qWithCorrect.options.count { it.isCorrect }}")
 
         when (currentMode) {
             MODE_COLLECT -> {
-                // 自动收集需要检测到正确答案标记
-                if (collectAuto && q.options.any { it.isCorrect }) {
-                    collectAndReport(q)
+                if (collectAuto && qWithCorrect.options.any { it.isCorrect }) {
+                    collectAndReport(qWithCorrect)
                 }
-                // 如果没有检测到正确标记但是有题目，可能在答题前
-                // 先不收集，等提交后再收集
+                // 无正确标记时跳过，等提交后再收集
             }
             MODE_ANSWER -> {
                 // 答题模式下每次内容变化都尝试匹配
