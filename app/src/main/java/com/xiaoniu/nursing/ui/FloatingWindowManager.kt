@@ -651,9 +651,7 @@ class FloatingWindowManager(private val context: Context) {
                         }
                     }
                     // 弹卡片显示详细信息
-                    showDebugCard("检测到 ${count} 个文本节点
-前3条:
-${sample}")
+                    showDebugCard("检测到 ${count} 个文本节点\n前3条:\n${sample}")
                 }
             }
         }
