@@ -59,6 +59,7 @@ class FloatingWindowManager(private val context: Context) {
     // 当前操作结果（用于结果卡片展示）
     private var lastResult: AnswerResult? = null
     private var currentMode: String = ExamAccessibilityService.MODE_IDLE
+    private var lastStats: Int = 0
 
     private val btnSize by lazy { dp(COLLAPSED_SIZE_DP) }
     private val menuW by lazy { dp(EXPANDED_WIDTH_DP) }
@@ -218,10 +219,17 @@ class FloatingWindowManager(private val context: Context) {
             }
         }
 
-        // 标题
+                // 标题
         card.addView(textView("🐙 刷题助手", 15f, 0xFF333333.toInt(), bold = true).apply {
             setPadding(0, 0, 0, dp(12))
         })
+
+        // 状态栏
+        val statusRow = textView("💤 待机中 · 题库: 加载中...", 12f, 0xFF666666.toInt()).apply {
+            setPadding(dp(12), 0, dp(12), dp(8))
+            tag = "status_row"
+        }
+        card.addView(statusRow)
 
         // 分隔线
         card.addView(divider())
@@ -553,12 +561,22 @@ class FloatingWindowManager(private val context: Context) {
     }
 
     fun updateStats(count: Int) {
+        lastStats = count
+        updateStatusRow()
+    }
+    private fun updateStatusRow() {
+        val modeText = when (currentMode) {
+            ExamAccessibilityService.MODE_COLLECT -> "📝"
+            ExamAccessibilityService.MODE_ANSWER -> "✍️"
+            else -> "💤"
+        }
+        val count = lastStats
         menuPanel?.let { panel ->
-            (panel as? LinearLayout)?.let { ll ->
-                for (i in 0 until ll.childCount) {
-                    val child = ll.getChildAt(i)
-                    if ((child as? TextView)?.tag == "stats_text") {
-                        child.text = "📊 共 $count 题"
+            (panel as? ViewGroup)?.let { vg ->
+                for (i in 0 until vg.childCount) {
+                    val tv = vg.getChildAt(i) as? TextView
+                    if (tv?.tag == "status_row") {
+                        tv.text = "$modeText · 题库 ${count}题"
                     }
                 }
             }
@@ -598,13 +616,8 @@ class FloatingWindowManager(private val context: Context) {
                 }
                 ExamAccessibilityService.ACTION_COLLECT_DONE -> {
                     val count = intent.getIntExtra("count", 0)
-                    val question = intent.getStringExtra("question_text") ?: ""
-                    showResultCard(AnswerResult(
-                        status = AnswerStatus.COLLECTED,
-                        questionText = question
-                    ))
                     updateStats(count)
-                    flashIcon("💾")
+                    flashCollectNotification(count)
                 }
                 ExamAccessibilityService.ACTION_MODE_CHANGED -> {
                     currentMode = intent.getStringExtra("mode") ?: ExamAccessibilityService.MODE_IDLE
@@ -630,6 +643,23 @@ class FloatingWindowManager(private val context: Context) {
         icon.postDelayed({ updateFloatIcon() }, 2000)
     }
 
+    private fun flashCollectNotification(count: Int) {
+        menuPanel?.let { panel ->
+            (panel as? ViewGroup)?.let { vg ->
+                for (i in 0 until vg.childCount) {
+                    val tv = vg.getChildAt(i) as? TextView
+                    if (tv?.tag == "status_row") {
+                        val prev = tv.text
+                        tv.text = "📥 +1 · 题库 ${count}题"
+                        tv.postDelayed({ tv.text = prev }, 2000)
+                    }
+                }
+            }
+        }
+        val icon = (floatBtn as? FrameLayout)?.findViewWithTag<TextView>("float_icon") ?: return
+        icon.text = "📥"
+        icon.postDelayed({ updateFloatIcon() }, 2000)
+    }
     private fun parseOptions(json: String): List<OptResult> {
         try {
             val gson = com.google.gson.Gson()
