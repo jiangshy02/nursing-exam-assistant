@@ -201,11 +201,11 @@ object ExamParser {
 
     /**
      * 带状态检测的解析（收集模式用）
-     * 解析题目 + 检测每个选项的节点状态来判断正确答案
+     * 解析题目 + 返回每个选项对应的 node，方便调用层检测 isSelected/isChecked
      */
     fun parseFromNodeWithState(rootNode: AccessibilityNodeInfo): List<
-            Pair<ParsedQuestion, List<AccessibilityNodeInfo>>> {
-        val result = mutableListOf<Pair<ParsedQuestion, List<AccessibilityNodeInfo>>>()
+            Pair<ParsedQuestion, List<AccessibilityNodeInfo?>>> {
+        val result = mutableListOf<Pair<ParsedQuestion, List<AccessibilityNodeInfo?>>>()
         val textNodes = mutableListOf<AccessibilityNodeInfo>()
         collectTextViews(rootNode, textNodes)
 
@@ -216,10 +216,16 @@ object ExamParser {
 
         val questions = groupIntoQuestions(items)
         questions.forEach { q ->
-            // 找到对应选项的原始 node
-            val optNodes = textNodes.filter { node ->
-                val text = node.text?.toString()?.trim() ?: return@filter false
-                q.options.any { opt -> text.contains(opt.text) || text.contains(opt.label) }
+            // 按选项顺序匹配对应 node
+            val optNodes = q.options.map { opt ->
+                textNodes.firstOrNull { node ->
+                    val text = node.text?.toString()?.trim() ?: return@firstOrNull false
+                    text.startsWith(opt.label + ".") ||
+                            text.startsWith(opt.label + "、") ||
+                            text.startsWith(opt.label + ")  ") ||
+                            text == opt.label + " " + opt.text ||
+                            text == opt.text
+                }
             }
             result.add(q to optNodes)
         }
