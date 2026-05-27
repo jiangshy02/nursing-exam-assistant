@@ -48,6 +48,8 @@ class ExamAccessibilityService : AccessibilityService() {
         const val ACTION_QUESTION_FOUND = "com.xiaoniu.nursing.QUESTION_FOUND"
         const val ACTION_QUESTION_NOT_FOUND = "com.xiaoniu.nursing.QUESTION_NOT_FOUND"
         const val ACTION_COLLECT_DONE = "com.xiaoniu.nursing.COLLECT_DONE"
+        const val ACTION_CHECK_SCREEN_TEXT = "com.xiaoniu.nursing.CHECK_SCREEN_TEXT"
+        const val ACTION_SCREEN_TEXT_RESULT = "com.xiaoniu.nursing.SCREEN_TEXT_RESULT"
 
         @Volatile var instance: ExamAccessibilityService? = null; private set
         @Volatile var currentMode: String = MODE_IDLE
@@ -204,6 +206,27 @@ class ExamAccessibilityService : AccessibilityService() {
     // 收集模式
     // ============================================================
 
+    private fun checkScreenText() {
+        Log.d(TAG, "🔍 检查屏幕文本...")
+        val root = rootInActiveWindow
+        if (root == null) {
+            broadcast(ACTION_SCREEN_TEXT_RESULT,
+                "node_count" to 0,
+                "sample" to "rootInActiveWindow 为空"
+            )
+            return
+        }
+        val nodes = mutableListOf<AccessibilityNodeInfo>()
+        ExamParser.collectTextViewsDebug(root, nodes)
+        val texts = nodes.mapNotNull { it.text?.toString()?.trim() }.filter { it.isNotBlank() }
+        root.recycle()
+        val sample = texts.take(3).joinToString("\n") { it.take(60) }
+        Log.d(TAG, "🔍 找到 ${texts.size} 个文本节点: $sample")
+        broadcast(ACTION_SCREEN_TEXT_RESULT,
+            "node_count" to texts.size,
+            "sample" to sample
+        )
+    }
     private fun collectAndReport(parsed: com.xiaoniu.nursing.model.ParsedQuestion) {
         scope.launch(Dispatchers.IO) {
             try {
@@ -446,6 +469,9 @@ class ExamAccessibilityService : AccessibilityService() {
                 Log.i(TAG, "✍️ 切换到答题模式")
                 broadcast(ACTION_MODE_CHANGED, "mode" to MODE_ANSWER)
                 executeAnswer()
+            }
+            ACTION_CHECK_SCREEN_TEXT -> {
+                checkScreenText()
             }
         }
     }
