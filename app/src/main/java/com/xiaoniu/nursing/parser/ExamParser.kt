@@ -59,11 +59,28 @@ object ExamParser {
     }
 
     private fun collectTextViews(node: AccessibilityNodeInfo, out: MutableList<AccessibilityNodeInfo>) {
-        if (node.className?.toString()?.contains("TextView") == true && !node.text.isNullOrBlank()) {
+        val text = node.text?.toString()?.trim()
+        val className = node.className?.toString() ?: ""
+        
+        // 收集所有有文本的节点，不限于 TextView
+        // 很多 App 用自定义组件、Button、RadioButton 等
+        if (!text.isNullOrBlank() && text.length >= 2) {
+            out.add(node)
+        }
+        
+        for (i in 0 until node.childCount) {
+            node.getChild(i)?.let { collectTextViews(it, out) }
+        }
+    }
+
+    /** 调试：收集所有有文本的节点（包括单字符） */
+    fun collectTextViewsDebug(node: AccessibilityNodeInfo, out: MutableList<AccessibilityNodeInfo>) {
+        val text = node.text?.toString()?.trim()
+        if (!text.isNullOrBlank()) {
             out.add(node)
         }
         for (i in 0 until node.childCount) {
-            node.getChild(i)?.let { collectTextViews(it, out) }
+            node.getChild(i)?.let { collectTextViewsDebug(it, out) }
         }
     }
 
