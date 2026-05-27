@@ -114,7 +114,21 @@ class ExamAccessibilityService : AccessibilityService() {
      * 屏幕内容变化 → 解析题目
      */
     private fun onContentChanged(event: AccessibilityEvent) {
-        val root = rootInActiveWindow ?: return
+        val root = rootInActiveWindow ?: run {
+            Log.w(TAG, "⚠️ rootInActiveWindow 为空")
+            return
+        }
+
+        // 调试：收集所有文本节点
+        val textNodes = mutableListOf<AccessibilityNodeInfo>()
+        ExamParser.collectTextViewsDebug(root, textNodes)
+        val allTexts = textNodes.mapNotNull { it.text?.toString()?.trim() }.filter { it.isNotBlank() }
+        if (allTexts.isNotEmpty()) {
+            Log.d(TAG, "🔍 屏幕文本节点 (${allTexts.size}个): ${allTexts.joinToString(" | ") { it.take(30) }}")
+        } else {
+            Log.w(TAG, "⚠️ 屏幕文本节点为空！可能页面在 WebView 中")
+        }
+        textNodes.forEach { it.recycle() }
 
         val questionsWithNodes = ExamParser.parseFromNodeWithState(root)
         root.recycle()
